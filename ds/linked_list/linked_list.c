@@ -164,3 +164,51 @@ void ll_print(struct node *head) {
   }
   printf("]\n");
 }
+
+
+/**
+ * @brief Calculate no of nodes in the linked chain
+ * 
+ * @param head - reference to the head node of linked list
+ * 
+ * @return int 
+ */
+int ll_length(struct node *head) {
+  int len = 0;
+
+  while (head != NULL) {
+    len++;
+    head = head->next;
+  }
+
+  return len;
+}
+
+
+/**
+ * @brief Reverse the linked list in-place.
+ * 
+ * @param head - pointer to current head node
+ * 
+ * @return struct node* - pointer to new head node after reverse
+ */
+struct node* ll_reverse(struct node *head) {
+  struct node *prev = NULL;    // as don't have previous element
+  struct node *curr = head;
+  struct node *next;
+
+  while (curr != NULL) {
+    // take a copy of ref to the next node
+    next = curr->next;
+
+    // update the curr element to link with previous element
+    curr->next = prev;
+
+    // update the other pointers to continue the loop
+    prev = curr;
+    curr = next;
+  }
+
+  // the node pointed by prev will be reference of first node
+  return prev;
+}

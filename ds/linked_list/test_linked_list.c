@@ -19,5 +19,10 @@ int main() {
 
   ll_print(ll);
 
+  printf("no of elements in list: %d\n", ll_length(ll));
+
+  linkedlist *lx = ll_reverse(ll);
+  ll_print(lx);
+
   return 0;
 }
