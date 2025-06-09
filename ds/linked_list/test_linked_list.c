@@ -18,11 +18,34 @@ int main() {
   ll_insert(ll, FLO, &y);
 
   ll_print(ll);
+  printf("position of '44': %d\n", ll_search(ll, INT, &x));
+  printf("position of '33.56': %d\n", ll_search(ll, FLO, &y));
 
   printf("no of elements in list: %d\n", ll_length(ll));
 
-  linkedlist *lx = ll_reverse(ll);
-  ll_print(lx);
+  ll_reverse(&ll);
+  ll_print(ll);
+
+  printf("position of '44': %d\n", ll_search(ll, INT, &x));
+  printf("position of '33.56': %d\n", ll_search(ll, FLO, &y));
+  printf("position of 'hello world': %d\n", ll_search(ll, STR, a));
+
+  int z = 400;
+  printf("position of '400': %d\n", ll_search(ll, INT, &z));
+
+  ll_insert_at(&ll, 0, INT, &z);
+  ll_print(ll);
+
+  ll_insert_at(&ll, ll_length(ll), INT, &z);
+  ll_print(ll);
+
+  char *zz = "hmm, will this work";
+
+  ll_insert_at(&ll, 1, STR, zz);
+  ll_print(ll);
+
+
+  
 
   return 0;
 }

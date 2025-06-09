@@ -192,9 +192,9 @@ int ll_length(struct node *head) {
  * 
  * @return struct node* - pointer to new head node after reverse
  */
-struct node* ll_reverse(struct node *head) {
+void ll_reverse(struct node **head) {
   struct node *prev = NULL;    // as don't have previous element
-  struct node *curr = head;
+  struct node *curr = *head;    // dereference head to get the current head
   struct node *next;
 
   while (curr != NULL) {
@@ -209,6 +209,114 @@ struct node* ll_reverse(struct node *head) {
     curr = next;
   }
 
-  // the node pointed by prev will be reference of first node
-  return prev;
+  // update the head to point to the new head
+  *head = prev;
+}
+
+
+/**
+ * @brief Search for the element and returns the first position of the value
+ * in the linked chain
+ * 
+ * @param head - reference to start node of linked list
+ * @param etype - type of element (INT, FLO, STR)
+ * @param val - value to be searched for
+ * @return int  - return positon of value in chain or -1
+ */
+int ll_search(struct node *head, int etype, void *val) {
+  int position = 0;
+
+  while (head != NULL) {
+    // if element type matches, then check for matching value
+    if (head->ele.etype == etype) {
+      switch (etype) {
+        case INT:
+          if (head->ele.value.ival == *(int *)val) return position;
+          break;
+        case FLO:
+          if (head->ele.value.fval == *(float *)val) return position;
+          break;
+        case STR:
+          if ( strcmp(head->ele.value.sval, (char *)val) == 0 ) return position;
+       }
+    }
+
+    // update the next element & positon
+    head = head->next;
+    position++;
+  }
+
+  return -1;
+}
+
+
+/**
+ * @brief Insert a node at any given position
+ * 
+ * @param head - pointer to reference to start node of linked list
+ * @param position - positon at which the new node is inserted
+ * @param etype - element type of the new node
+ * @param val  - value of the new node
+ * @return true - if insertion is success
+ * @return false - in insertion fails
+ */
+bool ll_insert_at(struct node **head, int position, int etype, void *val) {
+  int size = ll_length(*head);
+
+  // verify insert position is valid
+  if (position < 0 || position > size) {
+    perror("Invalid insert positon");
+    return false;
+  }
+
+  // create a node and update it with the value
+  struct node *n = ll_create_node();
+  ll_update_node_value(n, etype, val);
+
+  // 1. insertion at the start
+  if (position == 0) {
+    n->next = *head;   // update the next ref to old head
+    *head = n;         // update the head to new node
+    
+    return true;
+  }
+
+  // 2. insertion at the end
+  if (position == size) {
+    struct node *last = ll_get_last_node(*head);    // get the last node
+    last->next = n;                                 // update last node's next ref
+
+    return true;
+  }
+
+  // 3. insertion b/w the linked chain
+  struct node *node_one_before_pos = ll_get_node_at(*head, position - 1);
+  if (node_one_before_pos == NULL) return false;
+
+  n->next = node_one_before_pos->next;
+  node_one_before_pos->next = n;
+
+  return true;
+}
+
+
+/**
+ * @brief Get the node at the specified position
+ * 
+ * @param head - reference to start node of linked list
+ * @param position - position of node to pick
+ * @return struct node* - reference to node at given position
+ */
+struct node* ll_get_node_at(struct node *head, int position) {
+  int curr_pos = 0;
+
+  while (head != NULL) {
+    if (curr_pos == position) return head;
+
+    head = head->next;
+    curr_pos++;
+  }
+
+  perror("Invalid position of Node");
+  return NULL;
 }
