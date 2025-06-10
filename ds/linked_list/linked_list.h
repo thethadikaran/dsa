@@ -43,9 +43,7 @@ bool ll_insert(struct node*, int, void*);
 
 bool ll_insert_at(struct node**, int, int, void*);
 
-void ll_delete_val(struct node*, int);   // TODO
-
-void ll_delete_at(struct node*, int);   // TODO
+void ll_delete_at(struct node**, int);
 
 void ll_reverse(struct node**);
 
@@ -53,14 +51,12 @@ int ll_search(struct node*, int, void*);
 
 void ll_free(struct node*);
 
-
-
 void ll_print(struct node*);
 
 struct node* ll_get_last_node(struct node*);
 
 struct node* ll_get_node_at(struct node*, int);
 
-struct node* ll_create_node();
+static struct node* ll_create_node();
 
-bool ll_update_node_value(struct node *, int, void*);
+static bool ll_update_node_value(struct node *, int, void*);
