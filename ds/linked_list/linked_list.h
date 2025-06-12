@@ -9,6 +9,12 @@
 #define STR       3
 
 
+/**
+ * Single Linked list (one way list) 
+ *    - as it contains only one link to next node
+ *    - can move only in one direction
+ */
+
 
 /* struct used as info part in the node */
 struct element {
