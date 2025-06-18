@@ -14,3 +14,6 @@ add_subdirectory(double_linked_list)
 
 # add the circular_linked_list sub-directory
 add_subdirectory(circular_linked_list)
+
+# add the header_linked_list sub-directory
+add_subdirectory(header_linked_list)
