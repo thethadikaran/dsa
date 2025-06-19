@@ -23,3 +23,6 @@ add_subdirectory(stack_arr)
 
 # add the linked list stack sub-directory
 add_subdirectory(stack_ll)
+
+# add the linked list queue sub-directory
+add_subdirectory(queue_ll)
