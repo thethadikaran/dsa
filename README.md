@@ -19,4 +19,5 @@
 <ul>
   <li><a href="ds/stack_arr">array implementation of stack</a></li>
   <li><a href="ds/stack_ll">linked list implementation of stack</a></li>
+  <li><a href="ds/queue_ll">linked list implementation of queue</a></li>
 </ul>
