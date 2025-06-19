@@ -18,4 +18,5 @@
 <h6>:hamster: STACK & QUEUE </h6>
 <ul>
   <li><a href="ds/stack_arr">array implementation of stack</a></li>
+  <li><a href="ds/stack_ll">linked list implementation of stack</a></li>
 </ul>
