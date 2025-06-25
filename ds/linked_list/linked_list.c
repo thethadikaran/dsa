@@ -1,321 +1,365 @@
 #include "linked_list.h"
 
 
+linkedlist_t* ll_init() {
+  linkedlist_t *ll = malloc(sizeof(linkedlist_t));
+  if (!ll) return NULL;
 
-/**
- * @brief Create and allocate memory for a new node.
- * 
- * @return struct node* - address of the new node
- * @return NULL - if memory allocation fails
- */
-static struct node* ll_create_node() {
-  struct node *n = malloc(sizeof(struct node));
-  if (n == NULL) {
-    fprintf(stderr, "Failed to allocate memory for a Node\n");
-    return NULL;
+  // initialize the linkedlist
+  ll->head = NULL;
+
+  return ll;
+}
+
+
+
+bool ll_append(linkedlist_t *ll, etype_t etype, void *val) {
+  if (!ll || !val) return false;
+
+  // create node and update it with the value
+  node_t *new_node = ll_new_node(etype, val);
+  if (!new_node) return false;
+
+  // linked list has no nodes
+  if (ll->head == NULL) {
+    ll->head = new_node;
+    return true;
   }
-  n->next = NULL;
-  return n;
-}
 
+  // linked list has nodes
+  node_t *last_node = ll_last_node(ll);
+  if (!last_node) {
+    ll_free_node(new_node);      // release the memory of new node
+    return false;
+  }
 
-
-/**
- * @brief Creates a node with a marker for no value.
- * This initialized the linked list with one node.
- * 
- * @return struct node* - pointer to a single node
- * @return NULL - if memory allocation fails
- */
-struct node* ll_init() {
-  struct node *n = ll_create_node();
-  if (n == NULL) return NULL;
-
-  // to identify this node don't have any value
-  n->ele.etype = NO_VALUE;
-  return n;
-}
-
-
-
-/**
- * @brief Check the value type and update the element with the value
- * 
- * @param n - reference to the node
- * @param etype - value type. either one of these -> INT, FLO, STR
- * @param val - void pointer to the value (type case it to the etype data)
- * @return true - if the node is updated with the value
- * @return false - for wrong element type
- */
-static bool ll_update_node_value(struct node *n, int etype, void *val) {
-  switch (etype) {
-    case INT: n->ele.value.ival = *(int *)val; break;
-    case FLO: n->ele.value.fval = *(float *)val; break;
-    case STR: n->ele.value.sval = strdup((char *) val); break;    
-    default: return false;
-  }  
-  n->ele.etype = etype;   // finally update the element type in element struct
+  last_node->next = new_node;
   return true;
 }
 
 
 
-/**
- * @brief Create a node and update it with the value.
- * Add this new node at the end of the linked list.
- * 
- * @param head - pointer to head node of the linked list
- * @param etype - value type. either one of these -> INT, FLO, STR
- * @param val - void pointer to the value (type case it to the etype data)
- * 
- * @return true - if the addition of node is successful
- * @return false - if node additon has failed
- */
-bool ll_insert(struct node *head, int etype, void *val) { 
-  if (head == NULL) return false;
+bool ll_insert(linkedlist_t *ll, int idx, etype_t etype, void *val) {
+  if (!ll || !val || idx < 0) return false;
 
-  // verify if it's a first node initialized with NO_VALUE
-  if (head->ele.etype == NO_VALUE)
-    return ll_update_node_value(head, etype, val);
+  // linked list has no nodes
+  if (ll->head == NULL) {
+    // then idx must be zero, as element can be added at initial position only
+    if (idx == 0) 
+      return ll_append(ll, etype, val);
+    else 
+      return false;
+  }
 
-  struct node *new_node = ll_create_node();
-  if (new_node == NULL) return false;
+  // create a new node and update it with value
+  node_t *new_node = ll_new_node(etype, val);
+  if (!new_node) return false;
 
-  ll_update_node_value(new_node, etype, val);
-  struct node *last = ll_get_last_node(head);   // get the last node in the chain
-  last->next = new_node;
+  // insertion at the head position
+  if (idx == 0) {
+    new_node->next = ll->head;
+    ll->head = new_node;
+    return true;
+  }
+
+  // get the node; one before the idx position
+  node_t *idx_node = ll_get(ll, idx - 1);
+  if (!idx_node) return false;
+
+  // link the new node after the idx node
+  new_node->next = idx_node->next;
+  idx_node->next = new_node;
   return true;
 }
 
 
 
-/**
- * @brief Fetch the last node's address.
- * 
- * @param head - pointer to head node of the linked list
- * @return struct node* - the last node's address
- */
-struct node* ll_get_last_node(struct node *head) {
-  while (head->next != NULL) 
+node_t* ll_get(linkedlist_t *ll, int idx) {
+  if (!ll || idx < 0) return NULL;
+
+  node_t *head = ll->head;
+
+  // loop till i equals index and return the node at that position
+  for (int i = 0; head != NULL; i++, head = head->next) {
+    if (i == idx) return head;
+  }
+
+  // if we reached here, then invalid index is given
+  return NULL;
+}
+
+
+
+int ll_count(linkedlist_t *ll, etype_t etype, void *val) {
+  if (!ll || !ll->head || !val) return 0;
+
+  node_t *head = ll->head;
+  int freq = 0;
+
+  while (head) {
+    switch (etype) {
+      case INT:
+        freq += head->data.value.ival == *(int *)val ? 1 : 0;
+        break;
+
+      case FLO:
+        freq += head->data.value.fval == *(float *)val ? 1 : 0;
+        break;
+
+      case STR:
+        freq += strcmp(head->data.value.sval, (char *)val) == 0 ? 1 : 0;
+        break;
+
+      default:
+        return 0;
+    }
+
+    head  = head->next;
+  }
+  return freq;
+}
+
+
+
+int ll_index(linkedlist_t *ll, etype_t etype, void *val) {
+  if (!ll || !ll->head || !val) return -1;
+
+  node_t *head = ll->head;
+  for (int i = 0; head != NULL; i++, head = head->next) {
+    switch (etype) {
+      case INT: {
+        if (head->data.value.ival == *(int *)val) return i;
+        break;
+      }
+
+      case FLO: {
+        if (head->data.value.fval == *(float *)val) return i;
+        break;
+      }
+
+      case STR: {
+        if (strcmp(head->data.value.sval, (char *)val) == 0) return i;
+        break;
+      }
+
+      default:
+        // invalid element type found
+        return -1;
+    }
+  }
+  return -1;
+}
+
+
+
+node_t* ll_pop(linkedlist_t *ll) {
+  if (!ll || !ll->head) return NULL;
+
+  // only one node present in the linked list
+  if (ll->head->next == NULL) {
+    node_t* pop_node = ll->head;
+
+    ll->head = NULL;
+    return pop_node;   // user has to take care of freeing the node's memory
+  }
+
+  node_t *head = ll->head;
+  // get one node before the last node
+  while (head->next->next != NULL) 
     head = head->next;
-  
-  return head;
+
+  // update the second to last node's next reference 
+  node_t *pop_node = head->next;
+  head->next = NULL;
+  return pop_node;    // user has to take care of freeing the node's memory
 }
 
 
 
-/**
- * @brief Release the allocated memory for all the Nodes in linked chain.
- * Need to explicitly release the memory occupied by string element.
- * 
- * @param head - pointer to the head of the linked list
- */
-void ll_free(struct node *head) {
+bool ll_remove(linkedlist_t *ll, etype_t etype, void *val) {
+  if (!ll || !ll->head || !val) return false;
+
+  node_t *curr = ll->head;
+  node_t *prev = NULL;
+  bool is_match = false;
+
+  while (curr) {
+    switch (etype) {
+      case INT:
+        is_match = ( curr->data.value.ival == *(int *)val );
+        break;
+
+      case FLO:
+        is_match = ( curr->data.value.fval == *(float *)val );
+        break;
+
+      case STR:
+        is_match =  ( strcmp(curr->data.value.sval, (char *)val) == 0 );
+        break;
+
+      default: return false;    // invalid element type
+    }
+
+    // we got a match
+    if (is_match) {
+      if (prev) {
+        // value is in the middle or end
+        prev->next = curr->next;
+      }
+      else {
+        // value is at the head position
+        ll->head = curr->next;
+      }
+
+      ll_free_node(curr);
+      return true;      
+    }
+
+    // update the pointers to continue the loop
+    prev = curr;
+    curr = curr->next;
+  }
+  return false;
+}
+
+
+
+void ll_reverse(linkedlist_t *ll) {
+  if (!ll || !ll->head) return;
+
+  node_t *prev = NULL;
+  node_t *curr = ll->head;
+  node_t *next = NULL;
+
+  while (curr) {
+    next = curr->next;    // take a copy of the next node
+    curr->next = prev;    // update the curr node's next to prev node
+
+    prev = curr;
+    curr = next;
+  }
+
+  // finally update the head with the new node
+  ll->head = prev;
+}
+
+
+
+int ll_size(linkedlist_t *ll) {
+  if (!ll || !ll->head) return 0;
+
+  int len = 0;
+  node_t *head = ll->head;
+
   while (head != NULL) {
-    struct node *curr = head;   // mark the current node, need to free the memory
-
-    // if the node contains string data, then release the memory of it
-    if (curr->ele.etype == STR)  free(head->ele.value.sval);
-
+    len++;
     head = head->next;
-    free(curr);
   }
+
+  return len;
 }
 
 
 
-/**
- * @brief Print the values in the linked list (in python's list format).
- * 
- * @param head - reference to the linked list's head node
- */
-void ll_print(struct node *head) {
+void ll_print(linkedlist_t *ll) {
+  if (!ll) return;
+
+  node_t *curr = ll->head;
   printf("[");
 
-  while (head != NULL) {
-    switch (head->ele.etype) {
-      case INT: printf("%d", head->ele.value.ival); break;
-      case FLO: printf("%f", head->ele.value.fval); break;
-      case STR: printf("\"%s\"", head->ele.value.sval); break;
+  while (curr != NULL) {
+    switch (curr->data.etype) {
+      case INT: printf("%d", curr->data.value.ival); break;
+      case FLO: printf("%f", curr->data.value.fval); break;
+      case STR: printf("\"%s\"", curr->data.value.sval); break;
+      default: return;    // invalid element type
     }
-    head = head->next;
-    if (head != NULL) printf(", ");
+    curr = curr->next;
+
+    if (curr) printf(", ");
   }
   printf("]\n");
 }
 
 
 
-/**
- * @brief Calculate no of nodes in the linked chain
- * 
- * @param head - reference to the head node of linked list
- * @return int 
- */
-int ll_length(struct node *head) {
-  int len = 0;
+void ll_free(linkedlist_t *ll) {
+  if (!ll) return;
 
-  while (head != NULL) {
-    len++;
-    head = head->next;
+  node_t *head = ll->head;
+
+  while (head) {
+    node_t *todel = head;    // note the reference of the node to be freed
+    head = head->next;       // update the head to next node
+
+    ll_free_node(todel);
   }
-  return len;
+
+  // finally free the linkedlist_t struct
+  free(ll);
 }
 
 
+/* ---------- UTIL FUNCTIONS ---------- */
 
-/**
- * @brief Reverse the linked list in-place.
- * 
- * @param head - pointer to current head node
- */
-void ll_reverse(struct node **head) {
-  struct node *prev = NULL;    // as don't have previous element
-  struct node *curr = *head;   // dereference head to get the current head
-  struct node *next;
+node_t* ll_new_node(etype_t etype, void *val) {
+  node_t *new_node = malloc(sizeof(node_t));
+  if (!new_node) return NULL;
 
-  while (curr != NULL) {
-    next = curr->next;   // take a copy of ref to the next node
-    curr->next = prev;   // update the curr element to link with previous element
-    
-    prev = curr;
-    curr = next;
-  }
+  // update the node with the value
+  new_node->next = NULL;
 
-  *head = prev;   // update the head to point to the new head
-}
+  switch (etype) {
+    case INT:
+      // typecast void pointer to int pointer (int *) and then de-reference *
+      new_node->data.value.ival = *(int *)val;
+      break;
 
+    case FLO: 
+      new_node->data.value.fval = *(float *)val; 
+      break;
 
-
-/**
- * @brief Search for the element and returns the first position of the value
- * in the linked chain
- * 
- * @param head - reference to start node of linked list
- * @param etype - type of element (INT, FLO, STR)
- * @param val - value to be searched for
- * @return int  - return positon of value in chain or -1
- */
-int ll_search(struct node *head, int etype, void *val) {
-  int position = 0;
-
-  while (head != NULL) {
-    // if element type matches, then check for matching value
-    if (head->ele.etype == etype) {
-      switch (etype) {
-        case INT:
-          if (head->ele.value.ival == *(int *)val) return position;
-          break;
-        case FLO:
-          if (head->ele.value.fval == *(float *)val) return position;
-          break;
-        case STR:
-          if ( strcmp(head->ele.value.sval, (char *)val) == 0 ) return position;
-          break;
-       }
+    case STR: {
+      new_node->data.value.sval = strdup( (char *)val );
+      if (!new_node->data.value.sval) {
+        ll_free_node(new_node);
+        return NULL;
+      }
+      break;
     }
 
-    head = head->next;
-    position++;
+    default:
+      // if we reach here, then invalid etype is passed in
+      // release the memory of new node and return
+      ll_free_node(new_node);
+      return NULL;
   }
+  new_node->data.etype = etype;  // update the value type
 
-  return -1;
+  return new_node;
 }
 
 
 
-/**
- * @brief Insert a node at any given position
- * 
- * @param head - pointer to reference to start node of linked list
- * @param position - positon at which the new node is inserted
- * @param etype - element type of the new node
- * @param val  - value of the new node
- * @return true - if insertion is success
- * @return false - in insertion fails
- */
-bool ll_insert_at(struct node **head, int position, int etype, void *val) {
-  int size = ll_length(*head);
+node_t* ll_last_node(linkedlist_t *ll) {
+  if (!ll || !ll->head) return NULL;
 
-  // verify insert position is valid
-  if (position < 0 || position > size) {
-    fprintf(stderr, "Invalid insert positon");
-    return false;
-  }
+  node_t *head = ll->head;
 
-  // create a node and update it with the value
-  struct node *n = ll_create_node();
-  if (n == NULL) return false;
-  ll_update_node_value(n, etype, val);
+  // loop until the last element is reached
+  while (head->next != NULL) head = head->next;
 
-  // insertion at the start
-  if (position == 0) {
-    n->next = *head;   // update the next ref to old head
-    *head = n;         // update the head to new node
-    
-    return true;
-  }
-
-  // 2. insertion b/w the linked chain and at the end
-  struct node *node_one_before_pos = ll_get_node_at(*head, position - 1);
-  if (node_one_before_pos == NULL) return false;
-
-  n->next = node_one_before_pos->next;
-  node_one_before_pos->next = n;
-
-  return true;
+  return head;
 }
 
 
 
-/**
- * @brief Get the node at the specified position
- * 
- * @param head - reference to start node of linked list
- * @param position - position of node to pick
- * @return struct node* - reference to node at given position
- */
-struct node* ll_get_node_at(struct node *head, int position) {
-  int curr_pos = 0;
+void ll_free_node(node_t *n) {
+  if (!n) return;
 
-  while (head != NULL) {
-    if (curr_pos == position) return head;
+  // if node's value is string, then free it
+  if (n->data.etype == STR) free(n->data.value.sval);
 
-    head = head->next;
-    curr_pos++;
-  }
-
-  fprintf(stderr, "Invalid position of Node");
-  return NULL;
-}
-
-
-
-bool ll_is_empty(struct node *head) {
-  return (head == NULL);
-}
-
-
-
-void ll_delete_at(struct node **head, int position) {
-  if (head == NULL || *head == NULL) return;
-
-  struct node *to_delete = NULL;
-
-  if (position == 0) {
-    to_delete = *head;
-    *head = (*head)->next;
-  }
-  else {
-    struct node *previous_node = ll_get_node_at(*head, position-1);
-    struct node *next_node = previous_node->next->next;
-
-    to_delete = previous_node->next;
-
-    // update the chain to be continuous
-    previous_node->next = next_node;
-  }
-
-  if (to_delete->ele.etype == STR) free(to_delete->ele.value.sval);
-  free(to_delete);
+  // free the node
+  free(n);
 }
