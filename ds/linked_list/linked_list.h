@@ -24,9 +24,9 @@ typedef struct {
 
 
 /* structure to represent the node */
-typedef struct node_t {
+typedef struct node {
   element_t data;       // info part - stores value
-  struct node_t *next;         // pointer part - reference to next node
+  struct node *next;    // pointer part - reference to next node
 } node_t;
 
 

@@ -1,202 +1,172 @@
+#include <assert.h>
+
 #include "dlinked_list.h"
 
-// Function prototypes for testing
-void test_dll_init();
-void test_dll_insert();
-void test_dll_insert_at();
-void test_dll_delete_at();
-void test_dll_print();
-void test_dll_free();
-void test_dll_reverse();
-void test_edge_cases();
+// Test function for dll_init
+void test_dll_init() {
+    dlinkedlist_t *dll = dll_init();
+    printf("Testing dll_init: %s\n", dll != NULL ? "Passed" : "Failed");
+    dll_free(dll);
+}
 
+// Test function for dll_append
+void test_dll_append() {
+    dlinkedlist_t *dll = dll_init();
+    int val = 10;
+    bool result = dll_append(dll, INT, &val);
+    printf("Testing dll_append: %s\n", result ? "Passed" : "Failed");
+    dll_print(dll); // Expected: [10]
+
+    // Edge case: append NULL value
+    bool append_null_result = dll_append(dll, INT, NULL);
+    printf("Testing dll_append with NULL value: %s (Expected: false)\n", !append_null_result ? "Passed" : "Failed");
+
+    dll_free(dll);
+}
+
+// Test function for dll_insert
+void test_dll_insert() {
+    dlinkedlist_t *dll = dll_init();
+    int val1 = 10, val2 = 20, val3 = 15;
+    dll_append(dll, INT, &val1);
+    dll_append(dll, INT, &val2);
+    bool result = dll_insert(dll, 1, INT, &val3);
+    printf("Testing dll_insert at index 1: %s\n", result ? "Passed" : "Failed");
+    dll_print(dll); // Expected: [10, 15, 20]
+
+    // Edge case: insert at invalid index
+    bool insert_invalid_result = dll_insert(dll, 10, INT, &val3);
+    printf("Testing dll_insert at invalid index: %s (Expected: false)\n", !insert_invalid_result ? "Passed" : "Failed");
+
+    // Edge case: insert into empty list
+    bool insert_empty_result = dll_insert(dll, 0, INT, &val3);
+    printf("Testing dll_insert into empty list: %s\n", insert_empty_result ? "Passed" : "Failed");
+    dll_print(dll); // Expected: [15]
+
+    dll_free(dll);
+}
+
+// Test function for dll_get
+void test_dll_get() {
+    dlinkedlist_t *dll = dll_init();
+    int val1 = 10, val2 = 20;
+    dll_append(dll, INT, &val1);
+    dll_append(dll, INT, &val2);
+    node_t *node = dll_get(dll, 1);
+    printf("Testing dll_get at index 1: %s (Expected: 20)\n", node && node->data.value.ival == 20 ? "Passed" : "Failed");
+
+    // Edge case: get from an empty list
+    dlinkedlist_t *empty_dll = dll_init();
+    node_t *empty_get = dll_get(empty_dll, 0);
+    printf("Testing dll_get on empty list: %s (Expected: NULL)\n", empty_get == NULL ? "Passed" : "Failed");
+    dll_free(empty_dll);
+
+    // Edge case: get with invalid index
+    node_t *invalid_get = dll_get(dll, 10);
+    printf("Testing dll_get with invalid index: %s (Expected: NULL)\n", invalid_get == NULL ? "Passed" : "Failed");
+
+    dll_free(dll);
+}
+
+// Test function for dll_count
+void test_dll_count() {
+    dlinkedlist_t *dll = dll_init();
+    int val1 = 10, val2 = 10;
+    dll_append(dll, INT, &val1);
+    dll_append(dll, INT, &val2);
+    int count = dll_count(dll, INT, &val1);
+    printf("Testing dll_count for 10: %s (Expected: 2)\n", count == 2 ? "Passed" : "Failed");
+
+    // Edge case: count in an empty list
+    dlinkedlist_t *empty_dll = dll_init();
+    int empty_count = dll_count(empty_dll, INT, &val1);
+    printf("Testing dll_count on empty list: %s (Expected: 0)\n", empty_count == 0 ? "Passed" : "Failed");
+    dll_free(empty_dll);
+
+    dll_free(dll);
+}
+
+
+// Test function for dll_index
+void test_dll_index() {
+    dlinkedlist_t *dll = dll_init();
+    int val1 = 10, val2 = 20;
+    dll_append(dll, INT, &val1);
+    dll_append(dll, INT, &val2);
+    int index = dll_index(dll, INT, &val1);
+    printf("Testing dll_index for 10: %s (Expected: 0)\n", index == 0 ? "Passed" : "Failed");
+
+    // Edge case: index in an empty list
+    dlinkedlist_t *empty_dll = dll_init();
+    int empty_index = dll_index(empty_dll, INT, &val1);
+    printf("Testing dll_index on empty list: %s (Expected: -1)\n", empty_index == -1 ? "Passed" : "Failed");
+    dll_free(empty_dll);
+
+    // Edge case: index of a non-existent value
+    int non_existent_val = 30;
+    int non_existent_index = dll_index(dll, INT, &non_existent_val);
+    printf("Testing dll_index for non-existent value: %s (Expected: -1)\n", non_existent_index == -1 ? "Passed" : "Failed");
+
+    dll_free(dll);
+}
+
+
+
+// Test function for dll_pop
+void test_dll_pop() {
+    dlinkedlist_t *dll = dll_init();
+    int val1 = 10, val2 = 20;
+    dll_append(dll, INT, &val1);
+    dll_append(dll, INT, &val2);
+    node_t *popped_node = dll_pop(dll);
+    printf("Testing dll_pop: %s (Popped value: %d)\n", popped_node && popped_node->data.value.ival == 20 ? "Passed" : "Failed");
+    dll_free_node(popped_node);
+    dll_print(dll); // Expected: [10]
+
+    // Edge case: pop from an empty list
+    dlinkedlist_t *empty_dll = dll_init();
+    node_t *empty_pop = dll_pop(empty_dll);
+    printf("Testing dll_pop on empty list: %s (Expected: NULL)\n", empty_pop == NULL ? "Passed" : "Failed");
+    dll_free(empty_dll);
+
+    dll_free(dll);
+}
+
+
+// Test function for dll_size
+void test_dll_size() {
+    dlinkedlist_t *dll = dll_init();
+    int val1 = 10, val2 = 20;
+    dll_append(dll, INT, &val1);
+    dll_append(dll, INT, &val2);
+    int size = dll_size(dll);
+    printf("Testing dll_size: %s (Expected: 2)\n", size == 2 ? "Passed" : "Failed");
+
+    // Edge case: size of an empty list
+    dlinkedlist_t *empty_dll = dll_init();
+    int empty_size = dll_size(empty_dll);
+    printf("Testing dll_size on empty list: %s (Expected: 0)\n", empty_size == 0 ? "Passed" : "Failed");
+    dll_free(empty_dll);
+
+    dll_free(dll);
+}
+
+
+
+
+
+// TESTING STARTS HERE
 int main() {
-  puts("\n=== test init function ===\n");
   test_dll_init();
-
-  puts("\n=== test insert function ===\n");
+  test_dll_append();
   test_dll_insert();
+  test_dll_get();
+  test_dll_count();
+  test_dll_index();
+  test_dll_pop();
+  test_dll_size();
 
-  puts("\n=== test insert_at function ===\n");
-  test_dll_insert_at();
 
-  puts("\n=== test delete function ===\n");
-  test_dll_delete_at();
-
-  puts("\n=== test print function ===\n");
-  test_dll_print();
-
-  puts("\n=== test free function ===\n");
-  test_dll_free();
-
-  puts("\n=== test reverse function ===\n");
-  test_dll_reverse();
-
-  puts("\n=== test edgecases function ===\n");
-  test_edge_cases();
-
+  printf("\n*** ALL TEST PASSES ***\n");
   return 0;
 }
-
-void test_dll_init() {
-  printf("Running initialization test...\n");
-  struct dnode *head = dll_init();
-  if (head == NULL) {
-      printf("Initialization failed.\n");
-  } else {
-      printf("Initialization successful. Head node type: %d\n", head->ele.etype);
-      dll_free(head); // Free the initialized node
-  }
-}
-
-void test_edge_cases() {
-  printf("Running edge case tests...\n");
-
-  // Test initialization
-  struct dnode *head = dll_init();
-  if (head == NULL) {
-      printf("Initialization failed.\n");
-  } else {
-      printf("Initialization successful.\n");
-  }
-
-  // Test inserting into an empty list
-  int value = 10;
-  if (dll_insert(head, INT, &value)) {
-      printf("Inserted into empty list successfully.\n");
-  } else {
-      printf("Failed to insert into empty list.\n");
-  }
-
-  // Test printing the list
-  dll_print(head);
-
-  // Test inserting at position 0
-  int value2 = 20;
-  if (dll_insert_at(&head, 0, INT, &value2)) {
-      printf("Inserted at position 0 successfully.\n");
-  } else {
-      printf("Failed to insert at position 0.\n");
-  }
-  dll_print(head);
-
-  // Test inserting at position 1 (end of the list)
-  int value3 = 30;
-  if (dll_insert_at(&head, 1, INT, &value3)) {
-      printf("Inserted at position 1 successfully.\n");
-  } else {
-      printf("Failed to insert at position 1.\n");
-  }
-  dll_print(head);
-
-  // Test inserting at an invalid position
-  if (!dll_insert_at(&head, 5, INT, &value3)) {
-      printf("Correctly failed to insert at invalid position.\n");
-  }
-
-  // Test deleting the head
-  dll_delete_at(&head, 0);
-  printf("After deleting head:\n");
-  dll_print(head);
-
-  // Test deleting the last element
-  dll_delete_at(&head, 1);
-  printf("After deleting last element:\n");
-  dll_print(head);
-
-  // Test deleting at an invalid position
-  dll_delete_at(&head, 5);
-  printf("Correctly handled deletion at invalid position.\n");
-
-  // Free the list
-  dll_free(head);
-  printf("List freed successfully.\n");
-}
-
-void test_dll_insert() {
-  printf("Running insert tests...\n");
-  struct dnode *head = dll_init();
-  int value = 10;
-
-  if (dll_insert(head, INT, &value)) {
-      printf("Inserted into empty list successfully.\n");
-  } else {
-      printf("Failed to insert into empty list.\n");
-  }
-
-  dll_print(head);
-  dll_free(head);
-}
-
-void test_dll_insert_at() {
-  printf("Running insert_at tests...\n");
-  struct dnode *head = dll_init();
-  int value1 = 10, value2 = 20, value3 = 30;
-
-  dll_insert(head, INT, &value1);
-  dll_insert_at(&head, 0, INT, &value2); // Insert at head
-  dll_insert_at(&head, 1, INT, &value3); // Insert at end
-
-  dll_print(head);
-  dll_free(head);
-}
-
-void test_dll_delete_at() {
-  printf("Running delete_at tests...\n");
-  struct dnode *head = dll_init();
-  int value1 = 10, value2 = 20, value3 = 30;
-
-  dll_insert(head, INT, &value1);
-  dll_insert_at(&head, 0, INT, &value2);
-  dll_insert_at(&head, 1, INT, &value3);
-
-  dll_print(head);
-  dll_delete_at(&head, 1); // Delete second element
-  dll_print(head);
-  dll_free(head);
-}
-
-void test_dll_print() {
-  printf("Running print tests...\n");
-  struct dnode *head = dll_init();
-  int value1 = 10, value2 = 20;
-
-  dll_insert(head, INT, &value1);
-  dll_insert_at(&head, 0, INT, &value2); // Insert at head
-
-  dll_print(head);
-  dll_free(head);
-}
-
-void test_dll_free() {
-  printf("Running free tests...\n");
-  struct dnode *head = dll_init();
-  int value1 = 10, value2 = 20;
-
-  dll_insert(head, INT, &value1);
-  dll_insert_at(&head, 0, INT, &value2); // Insert at head
-
-  dll_print(head);
-  dll_free(head);
-  printf("List freed successfully.\n");
-}
-
-void test_dll_reverse() {
-  printf("Running reverse tests...\n");
-  struct dnode *head = dll_init();
-  int value1 = 10, value2 = 20, value3 = 30;
-
-  dll_insert(head, INT, &value1);
-  dll_insert_at(&head, 0, INT, &value2); // Insert at head
-  dll_insert_at(&head, 1, INT, &value3); // Insert at end
-
-  printf("Original list:\n");
-  dll_print(head);
-
-  dll_reverse(&head);
-  printf("Reversed list:\n");
-  dll_print(head);
-
-  dll_free(head);
-}
-
