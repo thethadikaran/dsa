@@ -1,276 +1,366 @@
 #include "hlinked_list.h"
 
 
-hlinkedlist *hll_init() {
-  hlinkedlist *hll = malloc(sizeof(hlinkedlist));
-  if (!hll) {
-    fprintf(stderr, "Memory allocation failed for HLinkedList");
-    return NULL;
-  }
 
-  // initilize with values
-  hll->first = NULL;
-  hll->last = NULL;
-  hll->len = 0;
+dhlinkedlist_t* dhll_init() {
+  dhlinkedlist_t *dhll = malloc(sizeof(dhlinkedlist_t));
+  if (!dhll) return NULL;
 
-  return hll;
+  // initialize with values
+  dhll->size = 0;
+  dhll->head = NULL;
+  dhll->tail = NULL;
+  return dhll;
 }
 
 
 
-int hll_count(hlinkedlist *hll) {
-  return (hll ? hll->len : -1);
-}
-
-
-
-bool hll_append(hlinkedlist *hll, enum element_type etype, void *val) {
-  if (!hll || !val) return false;
+bool dhll_append(dhlinkedlist_t *dhll, etype_t etype, void *val) {
+  if (!dhll || !val) return false;
 
   // create a node and update it with the value
-  struct node *new = hll_node_create_update(etype, val);
-  if (!new) return false;
+  node_t *new_node = dhll_new_node(etype, val);
+  if (!new_node) return false;
 
-  // no nodes were present in the linked list
-  if (hll->len == 0) {
-    hll->first = new;
+  // linked list has no nodes
+  if (dhll->head == NULL) {
+    dhll->head = new_node;  // since we have single node, both tail and
+    dhll->tail = new_node;  // head point to the same node
   }
   else {
-    // previous nodes were present in the linked list
-    hll->last->next = new;   // add the node to the chain
+    // linked list has nodes - then add the new node at the end
+    new_node->prev = dhll->tail;  // update new node's prev ref to previous last node
+    dhll->tail->next = new_node;  // update previous last node's next ref to point new node
+    dhll->tail = new_node;        // finally update the header node to point to new last node
   }
 
-  hll->last = new;      // update the header parameters
-  hll->len++;
-
+  dhll->size++;      // update the node count
   return true;
 }
 
 
 
-bool hll_insert(hlinkedlist *hll, int pos, enum element_type etype, void *val) {
-  if (!hll || pos < 0 || pos > hll->len || !val) {
-    fprintf(stderr, "Invalid insert position");
-    return false;    
+bool dhll_insert(dhlinkedlist_t *dhll, int idx, etype_t etype, void *val) {
+  if (!dhll || !val || idx < 0 || idx > dhll->size) return false;
+
+  // linked list has no nodes or linked list has node, and we need to insert 
+  // at the tail of linked list
+  if (dhll->head == NULL || idx == dhll->size)
+    return dhll_append(dhll, etype, val);
+
+  // create node and update it with the value
+  node_t *new_node = dhll_new_node(etype, val);
+  if (!new_node) return false;
+
+  if (idx == 0) {
+    // if insertion is at beginning of linked list
+    new_node->next = dhll->head;
+    if (dhll->head) dhll->head->prev = new_node;
+    dhll->head = new_node;
   }
-
-  // if inserting at the end or the list is empty
-  if (pos == hll->len) {
-    return hll_append(hll, etype, val);
-  }
-
-  // create a node and update it with the value
-  struct node *new = hll_node_create_update(etype, val);
-  if (!new) return false;
-
-  // if insertion at the start of the chain or if it's a first node
-  if (pos == 0) {
-    new->next = hll->first;     // add the old first node as next element
-    hll->first = new;           // update the head node
-  }
-  else {
-    // insertion at intermidiate positon
-    struct node *prev = hll_get_node(hll, pos-1);
-    new->next = prev->next;
-    prev->next = new;
-  }
-
-  // update the meta data
-  hll->len++;
-  return true;
-}
-
-
-
-bool hll_remove(hlinkedlist *hll, enum element_type etype, void *val) {
-  if (!hll || hll->len == 0) return false;
-
-  struct node *curr = hll->first;
-  struct node *prev = NULL;
-
-  while (curr != NULL) {
-    bool is_value_matched = false;
-
-    switch (etype) {
-      case INT:
-        is_value_matched = *(int *)val == curr->ele.value.ival;
-        break;
-      case FLO:
-        is_value_matched = *(float *)val == curr->ele.value.fval;
-        break;
-      case STR:
-        is_value_matched = (strcmp(curr->ele.value.sval, (char *)val) == 0);
-        break;
-    }
-
-    // check if we got the match
-    if (is_value_matched) {
-      if (!prev) {
-        // if prev is null, then it's the first node to remove
-        hll->first = curr->next;
-      }
-      else {
-        // if we have prev, then we have two possible situations,
-        // either it can be a last node or a intermidiate node
-        if (hll->last == curr) {
-          hll->last = prev;
-          prev->next = NULL;
-        }
-        else {
-          prev->next = curr->next;
-        }
-      }
-
-      hll_free_node(curr);   // free the removed node
-      hll->len--;            // update the node count
-
-      return true;
-    }
-    // if not a match , then updat the variables to continue the loop
-    prev = curr;
-    curr = curr->next;
-  }
-
-  return false;
-}
-
-
-
-struct node* hll_pop(hlinkedlist *hll) {
-  if (!hll || hll->len == 0) return NULL;
-
-  struct node *popped;
-
-  // special case - only one node present
-  if (hll->len == 1) {
-    popped = hll->first;
-
-    // update the header node references
-    hll->first = NULL;
-    hll->last = NULL;
+  else if (idx == dhll->size) {
+    // insertion is at the end of the linked list
+    new_node->prev = dhll->tail;  // update new node's prev ref to previous last node
+    dhll->tail->next = new_node;  // update previous last node's next ref to point new node
+    dhll->tail = new_node;        // finally update the header node to point to new last node
   }
   else {
-    // get the node previous to the last node
-    struct node *prev_to_last = hll_get_node(hll, hll->len - 2);
-    prev_to_last->next = NULL;          // since it's last node, update next ref
-
-    popped = hll->last;                 // make node of curr last node
-    hll->last = prev_to_last;           // update new last node in header
-  }
-
-  hll->len--;       // decrement the length counter
-  return popped;
-}
-
-
-
-void hll_free(hlinkedlist *hll) {
-  // verify if the reference is null
-  if (!hll || hll->first == NULL) return;
-
-  struct node *start = hll->first;
-  while (start) {
-    // take the reference to the node to bel deleted
-    struct node *todel = start;
-
-    start = start->next;
-
-    // free the node
-    hll_free_node(todel);
-  }
-
-  // finally free the hlinked list (head node)
-  free(hll);
-}
-
-
-
-void hll_print(hlinkedlist *hll) {
-  if (!hll) return;
-  
-  printf("\nlength: %d [", hll->len);
-
-  struct node *curr  =  hll->first;
-  while (curr) {
-    switch (curr->ele.etype) {
-      case INT: printf("%d", curr->ele.value.ival); break;
-      case FLO: printf("%f", curr->ele.value.fval); break;
-      case STR: printf("\"%s\"", curr->ele.value.sval); break;
-    }
-    // update curr ref to point to next node
-    curr = curr->next;
-
-    if (curr) printf(", ");
-  }
-
-  printf("]\n");
-}
-
-
-
-/* ***** UTIL FUNCTION DEFINITIONS ***** */
-
-
-struct node* hll_node_create_update(enum element_type etype, void *val) {
-  // create a node
-  struct node *n = malloc(sizeof(struct node));
-  if (!n) return NULL;
-
-  // initilize with value
-  n->next = NULL;
-
-  // update the node with value
-  switch (etype) {
-    case INT: n->ele.value.ival = *(int *)val; break;
-
-    case FLO: n->ele.value.fval = *(float *)val; break;
-
-    case STR: 
-      n->ele.value.sval = strdup((char *) val);
-      if (!n->ele.value.sval) {
-        fprintf(stderr, "Cannot duplicate string");
-        free(n);
-        return NULL;
-      }
-      break;
- 
-    default:
-      free(n);        // free the node, if type is invalid
+    // get the node at the insert positon
+    node_t *idx_node = dhll_get(dhll, idx);
+    if (!idx_node) {
+      dhll_free_node(new_node);
       return false;
+    }
+
+    // insert the new node by moving the idx_node to right
+    new_node->prev = idx_node->prev;   // update new node's prev and next ref
+    new_node->next = idx_node;
+
+    if (idx_node->prev) idx_node->prev->next = new_node;
+
+    idx_node->prev = new_node;
   }
 
-  n->ele.etype = etype;   // finally update the element type in element struct
-
-  return n;
+  dhll->size++;
+  return true;
 }
 
 
 
-struct node* hll_get_node(hlinkedlist *hll, int pos) {
-  if (!hll || pos < 0 || pos >= hll->len) return NULL;
+node_t* dhll_get(dhlinkedlist_t *dhll, int idx) {
+  if (!dhll || idx < 0 || idx > dhll->size) return NULL;
 
-  struct node *curr = hll->first;
-  int cpos = 0;
+  node_t *curr = dhll->head;
 
-  while (curr) {
-    if (cpos == pos) return curr;
-
-    // update to continue the loop
-    curr = curr->next;
-    cpos++;
+  // loop till i equals index and return the node at that position
+  for (int i = 0; curr != NULL; i++, curr = curr->next) {
+    if (i == idx) return curr;
   }
 
-  // if we reached here, then something wrong happened
+  // if we reached here, then invalid index is given
   return NULL;
 }
 
 
 
-void hll_free_node(struct node *n) {
+int dhll_count(dhlinkedlist_t *dhll, etype_t etype, void *val) {
+  if (!dhll || dhll->size == 0 || !val) return 0;
+
+  node_t *curr = dhll->head;
+  int freq = 0;
+
+  while (curr) {
+    switch (etype) {
+      case INT:
+        freq += curr->data.value.ival == *(int *)val ? 1 : 0;
+        break;
+
+      case FLO:
+        freq += curr->data.value.fval == *(float *)val ? 1 : 0;
+        break;
+
+      case STR:
+        freq += strcmp(curr->data.value.sval, (char *)val) == 0 ? 1 : 0;
+        break;
+
+      default:
+        return 0;
+    }
+    curr = curr->next;
+  }
+  return freq;
+}
+
+
+
+int dhll_index(dhlinkedlist_t *dhll, etype_t etype, void *val) {
+  if (!dhll || dhll->size == 0 || !val) return -1;
+
+  node_t *curr = dhll->head;
+  for (int i = 0; curr != NULL; i++, curr = curr->next) {
+    switch (etype) {
+      case INT: {
+        if (curr->data.value.ival == *(int *)val) return i;
+        break;
+      }
+
+      case FLO: {
+        if (curr->data.value.fval == *(float *)val) return i;
+        break;
+      }
+
+      case STR: {
+        if (strcmp(curr->data.value.sval, (char *)val) == 0) return i;
+        break;
+      }
+
+      default:
+        // invalid element type found
+        return -1;
+    }
+  }
+  return -1;
+}
+
+
+
+node_t* dhll_pop(dhlinkedlist_t *dhll) {
+  if (!dhll || dhll->size <= 0) return NULL;
+
+  node_t *popped_node = NULL;
+
+  if (dhll->size == 1) {
+    // linked list has only one node
+    popped_node = dhll->head;
+
+    dhll->head = NULL;
+    dhll->tail = NULL;
+  }
+  else {
+    // linked list has many nodes
+    popped_node = dhll->tail;
+
+    dhll->tail = dhll->tail->prev;    // update tail to point to previous node
+    dhll->tail->next = NULL;          // update prev node's next ref to NULL
+  }
+
+  dhll->size--;
+  return popped_node;  // user has to take care of freeing the node's memory
+}
+
+
+
+bool dhll_remove(dhlinkedlist_t *dhll, etype_t etype, void *val) {
+  if (!dhll || dhll->size <= 0 || !val) return false;
+
+  node_t *curr = dhll->head;
+  bool is_match = false;
+
+  while (curr) {
+    switch (etype) {
+      case INT:
+        is_match = ( curr->data.value.ival == *(int *)val );
+        break;
+
+      case FLO:
+        is_match = ( curr->data.value.fval == *(float *)val );
+        break;
+
+      case STR:
+        is_match =  ( strcmp(curr->data.value.sval, (char *)val) == 0 );
+        break;
+
+      default: return false;    // invalid element type
+    }
+
+    // we got a match
+    if (is_match) {
+      if (curr == dhll->head) {
+        // it's a head node
+        dhll->head = curr->next;                   // update head to point to next node   
+        if (dhll->head) dhll->head->prev = NULL;   // update the next node's prev ref to NULL
+        else dhll->tail = NULL;                    // linked list is empty
+      }
+      else if (curr == dhll->tail) {
+        // it's a tail node
+        dhll->tail = curr->prev;                   // update tail to point to one before last node
+        if (dhll->tail) dhll->tail->next = NULL;   // update new last node's next ref
+        else dhll->head = NULL;                    // linked list is empty
+      }
+      else {
+        // it's a intermittent node
+        curr->prev->next = curr->next;  // update prev node's next ref
+        curr->next->prev = curr->prev;  // update next node's prev ref
+      }
+      dhll_free_node(curr);   // finally, free the removed node
+      dhll->size--;           // decrement the node's count
+      return true;
+    }
+    curr = curr->next;   // update pointer to continue the loop
+  }
+  // if we reach here, then no matching element is found
+  return false;  
+}
+
+
+
+void dhll_reverse(dhlinkedlist_t *dhll) {
+  if (!dhll || dhll->size <= 0) return;
+
+  node_t *tmp = NULL;
+  node_t *curr = dhll->head;
+
+  while (curr) {
+    // swap the prev and next pointer reference in all the nodes
+    node_t *tmp = curr->next;
+    curr->next = curr->prev;
+    curr->prev = tmp;
+
+    curr = tmp;
+  }
+
+  // swap the head and tail references
+  node_t *swp = dhll->head;
+  dhll->head = dhll->tail;
+  dhll->tail = swp;
+}
+
+
+
+int dhll_size(dhlinkedlist_t *dhll) {
+  return dhll->size;
+}
+
+
+
+void dhll_print(dhlinkedlist_t *dhll) {
+  if (!dhll) return;
+
+  node_t *curr = dhll->head;
+  printf("[");
+
+  while (curr != NULL) {
+    switch (curr->data.etype) {
+      case INT: printf("%d", curr->data.value.ival); break;
+      case FLO: printf("%f", curr->data.value.fval); break;
+      case STR: printf("\"%s\"", curr->data.value.sval); break;
+      default: return;    // invalid element type
+    }
+    curr = curr->next;
+
+    if (curr) printf(", ");
+  }
+  printf("]\n");
+}
+
+
+
+void dhll_free(dhlinkedlist_t *dhll) {
+  if (!dhll) return;
+
+  node_t *curr = dhll->head;
+
+  while (curr) {
+    node_t *todel = curr;    // note the reference of the node to be freed
+    curr = curr->next;       // update the curr to next node
+
+    dhll_free_node(todel);
+  }
+
+  // finally free the linkedlist_t struct
+  free(dhll);
+}
+
+
+
+/* ---------- UTIL FUNCTIONS ---------- */
+
+node_t* dhll_new_node(etype_t etype, void *val) {
+  node_t *new_node = malloc(sizeof(node_t));
+  if (!new_node) return NULL;
+
+  // initialize with values
+  new_node->next = NULL;
+  new_node->prev = NULL;
+
+  switch (etype) {
+    case INT:
+      // typecast void pointer to int pointer (int *) and then de-reference *
+      new_node->data.value.ival = *(int *)val;
+      break;
+
+    case FLO: 
+      new_node->data.value.fval = *(float *)val; 
+      break;
+
+    case STR: {
+      new_node->data.value.sval = strdup( (char *)val );
+      if (!new_node->data.value.sval) {
+        dhll_free_node(new_node);
+        return NULL;
+      }
+      break;
+    }
+
+    default:
+      // if we reach here, then invalid etype is passed in
+      // release the memory of new node and return
+      dhll_free_node(new_node);
+      return NULL;
+  }
+  new_node->data.etype = etype;  // update the value type
+  return new_node;
+}
+
+
+
+void dhll_free_node(node_t *n) {
   if (!n) return;
 
-  // if node contains a string data, then free it 
-  if (n->ele.etype == STR) free(n->ele.value.sval);
+  // if node's value is string, then free it
+  if (n->data.etype == STR) free(n->data.value.sval);
 
+  // free the node
   free(n);
 }
+

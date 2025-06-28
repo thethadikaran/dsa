@@ -1,3 +1,18 @@
+#ifndef __HEADER_DOUBLE_LINKED_LIST__
+#define __HEADER_DOUBLE_LINKED_LIST__
+
+/**
+ * @file dlinked_list.h
+ * @author thethadikaran
+ * @brief Double linked list.
+ *        Each node has two links one to next node and another to previous node.
+ * @version 0.1
+ * @date 2025-06-27
+ * 
+ * @copyright Copyright (c) 2025
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -226,3 +241,5 @@ node_t* dll_last_node(dlinkedlist_t *);
  * @param node_t* - pointer to node_t struct
  */
 void dll_free_node(node_t *);
+
+#endif   // __HEADER_DOUBLE_LINKED_LIST__
