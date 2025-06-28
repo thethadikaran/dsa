@@ -11,7 +11,7 @@
   <li><a href="ds/linked_list">single linked list</a></li>
   <li><a href="ds/double_linked_list">double linked list</a></li>
   <li><a href="ds/circular_linked_list">circular linked list</a></li>
-  <li><a href="ds/header_linked_list">linked list with header</a></li>
+  <li><a href="ds/header_linked_list">double linked list with header</a></li>
 </ul>
 
 
