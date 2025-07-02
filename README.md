@@ -21,3 +21,11 @@
   <li><a href="ds/stack_ll">linked list implementation of stack</a></li>
   <li><a href="ds/queue_ll">linked list implementation of queue</a></li>
 </ul>
+
+
+---
+
+<h6>:hamster: SORTING | <a href="algo/sorting/sorting.h">H</a></h6>
+<ul>
+  <li><a href="algo/sorting/selection_sort.c">selection sort</a> ©️</li>
+</ul>
