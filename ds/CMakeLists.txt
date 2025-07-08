@@ -7,22 +7,22 @@ project(DataStructure)
 set(CMAKE_C_STANDARD 11)
 
 # add the linked_list sub-directory
-add_subdirectory(linked_list)
+add_subdirectory(list/linked_list)
 
 # add the doublee_linked_list sub-directory
-add_subdirectory(double_linked_list)
+add_subdirectory(list/double_linked_list)
 
 # add the circular_linked_list sub-directory
-add_subdirectory(circular_linked_list)
+add_subdirectory(list/circular_linked_list)
 
 # add the header_linked_list sub-directory
-add_subdirectory(header_linked_list)
+add_subdirectory(list/header_linked_list)
 
 # add the array stack sub-directory
-add_subdirectory(stack_arr)
+add_subdirectory(stack/stack_arr)
 
 # add the linked list stack sub-directory
-add_subdirectory(stack_ll)
+add_subdirectory(stack/stack_ll)
 
 # add the linked list queue sub-directory
-add_subdirectory(queue_ll)
+add_subdirectory(queue/queue_ll)

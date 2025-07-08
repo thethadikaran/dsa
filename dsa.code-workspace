@@ -21,6 +21,7 @@
       "**/.git": true,
       "LICENSE": true,
       ".gitignore": true,
+      "build": true
     }
   }
 }
