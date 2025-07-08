@@ -1,8 +1,24 @@
-# create library for selection_sort 
-add_library(selection_sort selection_sort.c)
+# specify the source files
+set(SOURCES
+    selection_sort.c
+    bubble_sort.c
+)
 
-# create executable
-add_executable(test_selection_sort test_selection_sort.c)
+# specify the test files directory
+set(TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
-# link the library with test executable
-target_link_libraries(test_selection_sort selection_sort)
+# add the test files
+file(GLOB TEST_FILES ${TEST_DIR}/*.c)
+
+# create a list to hold the executable
+foreach(TEST_SOURCE ${TEST_FILES})
+    # get the file name with out extension
+    get_filename_component(EXECUTABLE_NAME ${TEST_SOURCE} NAME_WE)
+
+    # generate executable for each test source files
+    add_executable(${EXECUTABLE_NAME} ${TEST_SOURCE} ${SOURCES})
+endforeach()
+
+
+# finally specify the header file
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
