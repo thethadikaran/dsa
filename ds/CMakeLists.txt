@@ -6,6 +6,9 @@ project(DataStructure)
 # specify the c standard
 set(CMAKE_C_STANDARD 11)
 
+# add the dynamic array sub-dir
+add_subdirectory(list/dynamic_array)
+
 # add the linked_list sub-directory
 add_subdirectory(list/linked_list)
 
