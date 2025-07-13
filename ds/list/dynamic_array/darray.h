@@ -159,6 +159,15 @@ element_t* da_pop(darray_t *);
 void da_remove(darray_t *, etype_t, void *);
 
 /**
+ * @brief Reverse the elements in the array
+ * 
+ * time complexity  -> O(N)
+ * space complexity -> O(1)
+ * 
+ */
+void da_reverse(darray_t *);
+
+/**
  * @brief No of elements present in the array
  * 
  * time complexity  -> O(1)
@@ -167,6 +176,8 @@ void da_remove(darray_t *, etype_t, void *);
  * @return int 
  */
 int da_size(darray_t *);
+
+void da_print(darray_t *);
 
 /**
  * @brief Free the memory allocated for the dynamic array

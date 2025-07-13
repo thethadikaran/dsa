@@ -131,6 +131,40 @@ element_t* da_pop(darray_t *da) {
 }
 
 
+void da_reverse(darray_t *da) {
+  if (!da || da->size <= 1) return;
+
+  element_t *tmp_swp = NULL;
+
+  // loop goes till the half of the array
+  for (int i = 0; i < (da->size / 2); i++) {
+    tmp_swp = da->data[i];
+    da->data[i] = da->data[da->size - 1 - i];
+    da->data[da->size - 1 - i] = tmp_swp;
+  }
+}
+
+
+
+void da_print(darray_t *da) {
+  if (!da) return;
+
+  printf("[");
+
+  for (int i = 0; i < da->size; i++) {
+    switch (da->data[i]->etype) {
+      case INT: printf("%d", da->data[i]->value.ival); break;
+      case FLO: printf("%f", da->data[i]->value.fval); break;
+      case STR: printf("\"%s\"", da->data[i]->value.sval); break;
+      default: return;    // invalid element type
+    }
+
+    if ((i + 1) < da->size) printf(", ");
+  }
+  printf("]\n");
+}
+
+
 
 void da_remove(darray_t *da, etype_t etype, void *val) {
   if (!da || !val || da_is_empty(da)) return;

@@ -224,6 +224,26 @@ void test_da_is_empty()
   free(da);
 }
 
+// test the array reverse
+void test_da_reverse() {
+  darray_t *da = da_init();
+
+  int a = 11, b = 12, c = 13, d = 14, e = 15, f = 22;
+  da_append(da, INT, &a);
+  da_append(da, INT, &b);
+  da_append(da, INT, &c);
+  da_append(da, INT, &d);
+  da_append(da, INT, &e);
+  da_append(da, INT, &f);
+
+  puts("before reverse");
+  da_print(da);
+
+  puts("after reverse");
+  da_reverse(da);
+  da_print(da);
+}
+
 // Main function to run all tests
 int main()
 {
@@ -241,6 +261,7 @@ int main()
   test_da_move_left();
   test_da_is_full();
   test_da_is_empty();
+  test_da_reverse();
 
   printf("*** All tests completed ***\n");
   return 0;
