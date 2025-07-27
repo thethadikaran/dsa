@@ -206,7 +206,6 @@ void ll_free(linkedlist_t *);
  *        space complexity - O(1)
  *                           O(N), if etype is string, N is length of string
  * 
- * @param linkedlist_t* - pointer to linkedlist_t struct 
  * @param etype_t - type of the data. allowed - INT, FLO, STR
  * @param void* - data as null pointer, will type casted based on etype
  * @return node_t* - return the note_t struct pointer

@@ -1,206 +1,359 @@
 #include "clinked_list.h"
 
-struct node* cll_create_node() {
-  struct node *n = malloc(sizeof(struct node));
-  if (!n) return NULL;
 
-  n->next = NULL;
-  return n;
-}
-
-
-
-clinkedlist* cll_init() {
-  clinkedlist *cll = malloc(sizeof(clinkedlist));
+clinkedlist_t* cll_init() {
+  clinkedlist_t *cll = malloc(sizeof(clinkedlist_t));
   if (!cll) return NULL;
 
-  cll->last = NULL;
+  cll->head = NULL;
   return cll;
 }
 
 
 
-bool cll_append_front(clinkedlist *cll, int etype, void *val) {
-  // create a node and update with the value
-  struct node *new = cll_create_node();
-  if (new == NULL) return false;
+bool cll_append(clinkedlist_t *cll, etype_t etype, void *val) {
+  if (!cll || !val) return false;
 
-  if (!cll_update_node_value(new, etype, val)) return false;
+  // create a node and update it with the value
+  node_t *new_node = cll_new_node(etype, val);
+  if (!new_node) return false;
 
-  // check if any nodes were present
-  if (cll->last == NULL) {
-    cll->last = new;
-    new->next = new;    // point the node to itself
+  // does the circlar linked list is empty?
+  if (!cll->head) {
+    // in circular linked list, the last node's next points to first node
+    // as we have only one node, the next ref points to itself
+    new_node->next = new_node;
+
+    cll->head = new_node;
+    return true;
   }
-  else {
-    // update new node's next ref with the previous first node
-    new->next = cll->last->next;
 
-    // update the last node's next ref to point to new first node
-    cll->last->next = new;
-  }
+  new_node->next = cll->head->next;  // update new node with the first node
+  cll->head->next = new_node;        // add the node at the end of the chain
+  cll->head = new_node;              // update the head to point the new last node
   return true;
 }
 
 
 
-bool cll_append_last(clinkedlist *cll, int etype, void *val) {
-  // create a node and update with the value
-  struct node *new = cll_create_node();
-  if (new == NULL) return false;
+node_t* cll_get(clinkedlist_t *cll, int idx) {
+  if (!cll || !cll->head || idx < 0) return NULL;
 
-  if (!cll_update_node_value(new, etype, val)) return false;
+  int pos = 0;
+  node_t *curr = cll->head->next;    // as head points to last node
 
-  // check if any nodes were present
-  if (cll->last == NULL) {
-    cll->last = new;
-    new->next = new;    // point the node to itself
+  do {
+    if (pos == idx) return curr;
+
+    curr = curr->next;
+    pos++;
+  } while (curr != cll->head->next);
+
+  // if we reach here, invalid idx is passed in
+  return NULL;
+}
+
+
+
+bool cll_insert(clinkedlist_t *cll, int idx, etype_t etype, void *val) {
+  if (!cll || !val || idx < 0) return false;
+
+  // linked list is empty
+  if (cll->head == NULL) {
+    // then the insert position should be zero, other values are not permitted
+    if (idx != 0) return false;
+
+    return cll_append(cll, etype, val);
   }
-  else {
-    // update new nodes next ref to point to first node
-    new->next = cll->last->next;
 
-    // update the previous last node's next ref to point to new node
-    cll->last->next = new;
+  // creat a new node and update with value
+  node_t *new_node = cll_new_node(etype, val);
+  if (!new_node) return false;
 
-    // update the last refernce in the circular_linked_list struct
-    cll->last = new;
+  // linked list not empty: insertion at the beginning 
+  if (idx == 0) {
+    new_node->next = cll->head->next;   // update new node's next ref to prev first node
+    cll->head->next = new_node;         // update last node's next ref to new first node
+    return true;
   }
 
+  // get the node; one before the idx positon
+  node_t *prev_node = cll_get(cll, idx - 1);
+  if (!prev_node) {
+    cll_free_node(new_node);
+    return false;
+  }
+
+  // insertion at the last
+  if (prev_node == cll->head) {
+    new_node->next = cll->head->next;  // update new nodes next ref to first node
+    cll->head->next = new_node;        // update prev last node next ref to new last node
+    cll->head = new_node;              // update head to point to new last node
+    return true;
+  }
+
+  // insertion in-between
+  new_node->next = prev_node->next;
+  prev_node->next = new_node;
   return true;
 }
 
 
 
-void cll_delete(clinkedlist *cll, int etype, void *val) {
-  if (!cll || !cll->last) return;
+int cll_count(clinkedlist_t *cll, etype_t etype, void *val) {
+  if (!cll || !cll->head || !val) return 0;
 
-  struct node *curr = cll->last->next;    // get the head node
-  struct node *prev = cll->last;
+  node_t *curr = cll->head->next;
+  int freq = 0;
 
-  // check if the first node has the value to be removed
-  if (cll_is_value_match(curr, etype, val)) {
-    // check if it's the only node
-    if (curr == cll->last) {
-      cll->last = NULL;
-      cll_free_node(curr);
+  do {
+    switch (etype) {
+      case INT:
+        freq += curr->data.value.ival == *(int *)val ? 1 : 0;
+        break;
+
+      case FLO:
+        freq += curr->data.value.fval == *(float *)val ? 1 : 0;
+        break;
+
+      case STR:
+        freq += strcmp(curr->data.value.sval, (char *)val) == 0 ? 1 : 0;
+        break;
+
+      default:
+        return 0;
     }
-    else {
-      // update the last node with next first node
-      cll->last->next = curr->next;
-      cll_free_node(curr);
+
+    curr = curr->next;
+  } while (curr != cll->head->next);
+  return freq;
+}
+
+
+
+int cll_index(clinkedlist_t *cll, etype_t etype, void *val) {
+  if (!cll || !cll->head || !val) return -1;
+
+  node_t *curr = cll->head->next;
+  int idx = 0;
+
+  do {
+    switch (etype) {
+      case INT: {
+        if (curr->data.value.ival == *(int *)val) return idx;
+        break;
+      }
+
+      case FLO: {
+        if (curr->data.value.fval == *(float *)val) return idx;
+        break;
+      }
+
+      case STR: {
+        if (strcmp(curr->data.value.sval, (char *)val) == 0) return idx;
+        break;
+      }
+
+      default:   // invalid element type found
+        return -1;
     }
-  
-  return;    
-  }
 
-  // loop through to identify the element to remove
-  curr = curr->next;
+    idx++;
+    curr = curr->next;
+  } while (curr != cll->head->next);
+  return -1;
+}
 
-  while (curr != cll->last && !cll_is_value_match(curr, etype, val)) {
+
+
+node_t* cll_pop(clinkedlist_t *cll) {
+  if (!cll || !cll->head) return NULL;
+
+  node_t *pop_node = cll->head;
+
+  // if only one node is present
+  if (pop_node->next == pop_node) {
+    cll->head = NULL;
+  } 
+  else {
+    node_t *curr = cll->head->next;
+
+    // get one node befoe the last node
+    while (curr->next != pop_node)
+      curr = curr->next;
+
+    curr->next = pop_node->next;   // update prev node to point to first node
+    cll->head = curr;              // update head to new prev node
+  }            
+  return pop_node;
+}
+
+
+
+bool cll_remove(clinkedlist_t *cll, etype_t etype, void *val) {
+  if (!cll || !val || !cll->head) return false;
+
+  node_t *curr = cll->head->next;
+  node_t *prev = NULL;
+
+  do {
+    bool is_match = false;
+
+    switch (etype) {
+      case INT:
+        is_match = ( curr->data.value.ival == *(int *)val );
+        break;
+
+      case FLO:
+        is_match = ( curr->data.value.fval == *(float *)val );
+        break;
+
+      case STR:
+        is_match =  ( strcmp(curr->data.value.sval, (char *)val) == 0 );
+        break;
+
+      default: return false;    // invalid element type
+    }
+
+    if (is_match) {
+      if (!prev) {
+        // value is present in FIRST NODE
+
+        if (curr == curr->next) cll->head = NULL;   // one node in linked list
+        else cll->head->next = curr->next;          // update last node to point to new first node
+      }
+      else if (curr == cll->head) {
+        // value is present in LAST NODE
+
+        prev->next = curr->next;  // update new last node's next ref to first node
+        cll->head = prev;         // update head node with new last node
+      }
+      else {
+        // value is present IN-BETWEEN the linked list
+
+        prev->next  = curr->next; // update prev node's next ref with curr next ref
+      }
+
+      // free the node to be removed
+      cll_free_node(curr);
+      return true;
+    }
+
     prev = curr;
     curr = curr->next;
-  }
+  } while (curr != cll->head->next);
 
-  if (cll_is_value_match(curr, etype, val)) {
-    // update the prev node's next ref to the curr node's next
-    prev->next = curr->next;
-
-    // check if the curr node is the last node
-    if (curr == cll->last) cll->last = prev;
-
-    cll_free_node(curr);
-  }
-}
-
-
-
-/**
- * @brief Check the value type and update the element with the value
- * 
- * @param n - reference to the node
- * @param etype - value type. either one of these -> INT, FLO, STR
- * @param val - void pointer to the value (type case it to the etype data)
- * @return true - if the node is updated with the value
- * @return false - for wrong element type
- */
-static bool cll_update_node_value(struct node *n, int etype, void *val) {
-  switch (etype) {
-    case INT: n->ele.value.ival = *(int *)val; break;
-    case FLO: n->ele.value.fval = *(float *)val; break;
-    case STR: n->ele.value.sval = strdup((char *) val); break;    
-    default: return false;
-  }  
-  n->ele.etype = etype;   // finally update the element type in element struct
-  return true;
-}
-
-
-
-bool cll_is_value_match(struct node *n, int etype, void *val) {
-  if (n->ele.etype == etype) {
-    switch (etype) {
-      case INT: return ( *(int *)val == n->ele.value.ival );
-      case FLO: return ( *(float *)val == n->ele.value.fval );
-      case STR: return ( strcmp( (char *)val, n->ele.value.sval) == 0);
-      default: return false;
-    }
-  }
+  // if we reach here, then either no node matches the value
   return false;
 }
 
 
 
-void cll_free_node(struct node *n) {
-  if (n->ele.etype == STR) 
-    free(n->ele.value.sval);
-  
-  free(n);
+int cll_size(clinkedlist_t *cll) {
+  if (!cll || !cll->head) return 0;
+
+  int size = 0;
+  node_t* curr = cll->head->next;
+
+  do {
+    size++;
+    curr = curr->next;
+  } while (curr != cll->head->next);
+
+  return size;
 }
 
 
 
-void cll_free(clinkedlist *cll) {
-  // check the linked list is empty?
-  if (cll->last == NULL) {
-    free(cll);
-    return;
-  }
+void cll_free(clinkedlist_t *cll) {
+  if (!cll) return;
+  if (!cll->head) { free(cll); return; }
 
-  // start from the first node
-  struct node *curr = cll->last->next;
+  node_t *curr = cll->head->next;
+  node_t *start = curr;
 
   do {
-    struct node *to_del = curr;
-    curr = curr->next;                // move to next node
-    cll_free_node(to_del);            // free curr node
-  } while (curr != cll->last->next);  // loop until the curr node reach head again
+    node_t *todel = curr;
+    curr = curr->next;
+    cll_free_node(todel);
+  } while (curr != start);
 
+  // finally free the linkedlist_t struct
   free(cll);
 }
 
 
+/* ---------- UTIL FUNCTIONS ---------- */
 
-void cll_print(clinkedlist *cll) {
-  printf("\n[");
+void cll_print(clinkedlist_t *cll) {
+  if (!cll || !cll->head) { puts("[]"); return; }
 
-  if (cll->last == NULL) {
-    printf("]\n");
-    return;
-  }
-
-  struct node *curr = cll->last->next;
+  node_t *curr = cll->head->next;
+  printf("[");
 
   do {
-    switch (curr->ele.etype) {
-      case INT: printf("%d", curr->ele.value.ival); break;
-      case FLO: printf("%f", curr->ele.value.fval); break;
-      case STR: printf("\"%s\"", curr->ele.value.sval); break;
+    switch (curr->data.etype) {
+      case INT: printf("%d", curr->data.value.ival); break;
+      case FLO: printf("%f", curr->data.value.fval); break;
+      case STR: printf("\"%s\"", curr->data.value.sval); break;
+      default: return;    // invalid element type
     }
     curr = curr->next;
 
-    if (curr != cll->last->next) printf(", ");  // to avoid printing extra comma
-  } while (curr != cll->last->next);
-
+    if (curr != cll->head->next) printf(", ");
+  } while (curr != cll->head->next);
   printf("]\n");
+}
+
+
+
+node_t* cll_new_node(etype_t etype, void *val) {
+  if (!val) return NULL;
+
+  node_t *new_node = malloc(sizeof(node_t));
+  if (!new_node) return NULL;
+
+  // update the node with the value
+  new_node->next = NULL;
+
+  switch (etype) {
+    case INT:
+      // typecast void pointer to int pointer (int *) and then de-reference *
+      new_node->data.value.ival = *(int *)val;
+      break;
+
+    case FLO: 
+      new_node->data.value.fval = *(float *)val; 
+      break;
+
+    case STR: {
+      new_node->data.value.sval = strdup( (char *)val );
+      if (!new_node->data.value.sval) {
+        cll_free_node(new_node);
+        return NULL;
+      }
+      break;
+    }
+
+    default:
+      // if we reach here, then invalid etype is passed in
+      // release the memory of new node and return
+      cll_free_node(new_node);
+      return NULL;
+  }
+  new_node->data.etype = etype;  // update the value type
+
+  return new_node;
+}
+
+
+
+void cll_free_node(node_t *n) {
+  if (!n) return;
+
+  // if node's value is string, then free it
+  if (n->data.etype == STR) free(n->data.value.sval);
+
+  // free the node
+  free(n);
 }
