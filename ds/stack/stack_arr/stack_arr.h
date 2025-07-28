@@ -41,7 +41,7 @@ typedef struct {
 /* struct representation of a stack */
 typedef struct {
   int top;                    // points to index of stack top
-  element_t *data[SIZE];     // array of pointers to struct element
+  element_t *data[SIZE];      // array of pointers to struct element
 } stack_arr_t;
 
 
