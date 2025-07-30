@@ -1,8 +1,8 @@
 # create library for linked list queue
-add_library(llqueue llqueue.c)
+add_library(queue_ll queue_ll.c)
 
 # create executable
-add_executable(test_llqueue test_llqueue.c)
+add_executable(test_queue_ll test_queue_ll.c)
 
 # link the library with test executable
-target_link_libraries(test_llqueue llqueue)
+target_link_libraries(test_queue_ll queue_ll)
