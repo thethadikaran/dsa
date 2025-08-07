@@ -56,9 +56,9 @@ void s_insertion_sort(int *, int);
 /**
  * @brief SHELL SORT ALGORITHM (DIMINISHING INSERTION SORT)
  * 
- *        time complexity  - 
- *        space complexity -    ; in-place sort
- *        stable
+ *        time complexity  - O( N(log N)^2 )
+ *        space complexity - O(1)     ; in-place sort
+ *        not stable
  *        data sensisitve
  *        easy to implement
  * 

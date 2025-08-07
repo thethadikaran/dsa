@@ -3,6 +3,7 @@ set(SOURCES
     selection_sort.c
     bubble_sort.c
     insertion_sort.c
+    shell_sort.c
 )
 
 # specify the test files directory
