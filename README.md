@@ -38,7 +38,8 @@
 
 <h6>:mushroom: SORTING | <a href="algo/sorting/sorting.h">H</a></h6>
 <ul>
-  <li><a href="algo/sorting/selection_sort.c">selection sort</a> ©️</li>
-  <li><a href="algo/sorting/bubble_sort.c">bubble sort</a> ©️</li>
-  <li><a href="algo/sorting/insertion_sort.c">insertion sort</a> ©️</li>
+  <li><a href="algo/sorting/selection_sort.c">selection sort</a></li>
+  <li><a href="algo/sorting/bubble_sort.c">bubble sort</a></li>
+  <li><a href="algo/sorting/insertion_sort.c">insertion sort</a></li>
+  <li><a href="algo/sorting/shell_sort.c">shell sort</a></li>
 </ul>
