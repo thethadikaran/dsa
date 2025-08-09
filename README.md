@@ -19,15 +19,16 @@
 
 <h6>:cactus: STACK </h6>
 <ul>
-  <li><a href="ds/stack/stack_arr">array implementation of stack</a></li>
-  <li><a href="ds/stack/stack_ll">linked list implementation of stack</a></li>
+  <li><a href="ds/stack/stack_arr">stack (array based implementation)</a></li>
+  <li><a href="ds/stack/stack_ll">stack (linked list based implementation)</a></li>
 </ul>
 
 
 
 <h6>:hibiscus: QUEUE </h6>
 <ul>
-  <li><a href="ds/queue/queue_ll">linked list implementation of queue</a></li>
+  <li><a href="ds/queue/queue_ll">queue (linked list based implementation)</a></li>
+  <li><a href="ds/queue/circular_queue">circular queue (array based implementation)</a></li>
 </ul>
 
 
