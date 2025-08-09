@@ -21,3 +21,6 @@ add_subdirectory(stack/stack_ll)
 
 # add the linked list queue sub-directory
 add_subdirectory(queue/queue_ll)
+
+# add the circular queue sub-directory
+add_subdirectory(queue/circular_queue)
