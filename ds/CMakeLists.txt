@@ -24,3 +24,6 @@ add_subdirectory(queue/queue_ll)
 
 # add the circular queue sub-directory
 add_subdirectory(queue/circular_queue)
+
+# add the priority queue sub-directory
+add_subdirectory(queue/priority_queue)
